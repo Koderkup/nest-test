@@ -14,6 +14,10 @@ export class UsersService {
     });
   }
 
+  async getUserById(id: number): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { id } });
+  }
+
   async users(params: {
     skip?: number;
     take?: number;
@@ -54,7 +58,7 @@ export class UsersService {
     });
   }
   async getUserByEmail(email: string): Promise<User | null> {
-    return this.prisma.user.findUnique({where: {email:email}});
+    return this.prisma.user.findUnique({ where: { email: email } });
   }
 }
  

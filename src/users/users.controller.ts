@@ -6,6 +6,10 @@ import {
   Body,
   Put,
   Delete,
+  UseGuards,
+  Req,
+  NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserCreateDto } from './dto/create-user.dto';
@@ -17,6 +21,10 @@ import {
   ApiTags,
   ApiProperty,
 } from '@nestjs/swagger';
+import {JwtAuthGuard} from '../auth/jwt-auth.guard'
+import {RolesGuard} from '../auth/roles.quards'
+import { Roles } from 'src/auth/roles-auth.decorator';
+import { UserRequest } from './request.interface';
 class UserResponse {
   @ApiProperty()
   id: number;
@@ -55,8 +63,45 @@ export class UsersController {
     type: [UserResponse],
     description: 'List of users',
   })
+  @Roles('admin')
+  @UseGuards(RolesGuard)
   @Get('users')
   async getUsers(): Promise<UserModel[]> {
     return this.usersService.users({});
   }
+  @ApiOperation({ summary: 'Get user profile' })
+  @ApiResponse({
+    status: 200,
+    type: UserResponse,
+    description: 'User profile',
+  })
+  @Roles('admin')
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
+  @Get('users/:id')
+  async getUserProfile(
+    @Param('id') id: string,
+    @Req() request: UserRequest,
+  ): Promise<UserModel> {
+    const userId = parseInt(id, 10);
+    const user = await this.usersService.user({ id: userId });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const requesterId = request.user?.id;
+    const isAdmin = request.user?.role === 'admin';
+
+    if (!isAdmin) {
+      if (requesterId !== userId) {
+        throw new ForbiddenException(
+          'You do not have permission to access this user profile',
+        );
+      }
+    }
+
+    return user;
+  }
 }
+
