@@ -32,6 +32,9 @@ export class RolesGuard implements CanActivate {
     }
 
     const authHeader = request.headers.authorization;
+    if (!authHeader) {
+      throw new UnauthorizedException('No authorization header found');
+    }
     const token = this.extractTokenFromHeader(authHeader);
 
     if (!token) {
@@ -47,7 +50,6 @@ export class RolesGuard implements CanActivate {
         message: 'Пользователь не авторизован',
       });
     }
-
     return requiredRoles.some((role) => user.role.includes(role));
   }
 

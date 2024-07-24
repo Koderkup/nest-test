@@ -64,6 +64,7 @@ export class UsersController {
     description: 'List of users',
   })
   @Roles('admin')
+  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
   @Get('users')
   async getUsers(): Promise<UserModel[]> {
