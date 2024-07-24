@@ -32,9 +32,10 @@ export class PostsService {
   }
 
   async createPost(data: Prisma.PostCreateInput): Promise<Post> {
-    return this.prisma.post.create({
+    const post = this.prisma.post.create({
       data,
     });
+    return post;
   }
 
   async updatePost(params: {
