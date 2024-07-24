@@ -36,7 +36,7 @@ export class RolesGuard implements CanActivate {
 
     if (!token) {
       throw new UnauthorizedException({
-        message: 'User is not authorized',
+        message: 'Пользователь не авторизован',
       });
     }
 
@@ -44,7 +44,7 @@ export class RolesGuard implements CanActivate {
 
     if (!user || !user.role) {
       throw new UnauthorizedException({
-        message: 'User is not authorized',
+        message: 'Пользователь не авторизован',
       });
     }
 

@@ -21,8 +21,8 @@ import {
   ApiTags,
   ApiProperty,
 } from '@nestjs/swagger';
-import {JwtAuthGuard} from '../auth/jwt-auth.guard'
-import {RolesGuard} from '../auth/roles.quards'
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.quards';
 import { Roles } from 'src/auth/roles-auth.decorator';
 import { UserRequest } from './request.interface';
 class UserResponse {
@@ -75,7 +75,7 @@ export class UsersController {
     type: UserResponse,
     description: 'User profile',
   })
-  @Roles('admin')
+  @Roles('admin', 'user')
   @UseGuards(RolesGuard)
   @UseGuards(JwtAuthGuard)
   @Get('users/:id')
@@ -96,12 +96,81 @@ export class UsersController {
     if (!isAdmin) {
       if (requesterId !== userId) {
         throw new ForbiddenException(
-          'You do not have permission to access this user profile',
+          'Вам не разрешено смотреть профиль этого пользователя',
         );
       }
     }
 
     return user;
   }
-}
 
+  @ApiOperation({ summary: 'Update user profile' })
+  @ApiResponse({
+    status: 200,
+    type: UserResponse,
+    description: 'Updated user profile',
+  })
+  @Roles('admin', 'user')
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
+  @Put('users/:id')
+  async updateUserProfile(
+    @Param('id') id: string,
+    @Body() updateData: Prisma.UserUpdateInput,
+    @Req() request: UserRequest,
+  ): Promise<UserModel> {
+    const userId = parseInt(id, 10);
+    const user = await this.usersService.user({ id: userId });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const requesterId = request.user?.id;
+    const isAdmin = request.user?.role === 'admin';
+
+    if (!isAdmin && requesterId !== userId) {
+      throw new ForbiddenException(
+        'Вам не разрешено изменять профиль этого пользователя',
+      );
+    }
+
+    return this.usersService.updateUser({
+      where: { id: userId },
+      data: updateData,
+    });
+  }
+
+  @ApiOperation({ summary: 'Delete user' })
+  @ApiResponse({
+    status: 200,
+    type: UserResponse,
+    description: 'Deleted user',
+  })
+  @Roles('admin', 'user')
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
+  @Delete('users/:id')
+  async deleteUser(
+    @Param('id') id: string,
+    @Req() request: UserRequest,
+  ): Promise<UserModel> {
+    const userId = parseInt(id, 10);
+    const user = await this.usersService.user({ id: userId });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const requesterId = request.user?.id;
+    const isAdmin = request.user?.role === 'admin';
+
+    if (!isAdmin && requesterId !== userId) {
+      throw new ForbiddenException(
+        'Вам не разрешено удалять профиль этого пользователя',
+      );
+    }
+
+    return this.usersService.deleteUser({ id: userId });
+  }
+}

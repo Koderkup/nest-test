@@ -12,6 +12,7 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersController } from './users/users.controller';
 import { AuthService } from './auth/auth.service';
 import { JwtModule } from '@nestjs/jwt';
+import { PostsController } from './posts/posts.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -28,7 +29,7 @@ import { JwtModule } from '@nestjs/jwt';
       },
     }),
   ],
-  controllers: [AppController, UsersController],
+  controllers: [AppController, UsersController, PostsController],
   providers: [
     AppService,
     UsersService,
